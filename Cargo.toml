@@ -2,5 +2,10 @@
 name = "ssd1325"
 version = "0.1.0"
 authors = ["Martin Mroz <martinmroz@gmail.com>"]
+repository = "https://github.com/martinmroz/ssd1325.git"
+homepage = "https://github.com/martinmroz/ssd1325.git"
+license = "MIT"
+readme = "README.md"
+description = "Adafruit 2.7" Monochrome 128x64 OLED Driver"
 
 [dependencies]
