@@ -172,7 +172,7 @@ pub enum DisplayMode {
 pub trait ControlChannel {
   /// Put the display communication channel in the specified `mode`.
   /// Once the command is executed the display must be left in a state other than `Reset`.
-  fn run_in_mode(&mut self, mode: DisplayMode, f: &FnMut() -> Result<(),Box<error::Error>>) -> Result<(),Box<error::Error>>;
+  fn run_in_mode(&mut self, mode: DisplayMode, f: &mut FnMut() -> Result<(),Box<error::Error>>) -> Result<(),Box<error::Error>>;
 }
 
 /// An SSD1325 display interface command adapter.
@@ -316,7 +316,7 @@ impl<'a> Ssd1325<'a> {
   /// # Returns
   /// An error from the control channel if the display could not enter Reset mode.
   fn reset(&mut self) -> Result<(),Box<error::Error>> {
-    self.control_channel.run_in_mode(DisplayMode::Reset, &move || {
+    self.control_channel.run_in_mode(DisplayMode::Reset, &mut move || {
       thread::sleep(time::Duration::from_millis(10));
       Ok(())
     })?;
@@ -334,7 +334,7 @@ impl<'a> Ssd1325<'a> {
     let mut transport = &mut self.transport;
 
     // Send the sequence to the display over the transport once the control channel is configured.
-    self.control_channel.run_in_mode(mode, &move || {
+    self.control_channel.run_in_mode(mode, &mut move || {
       let sent = transport.write(bytes).map_err(|e| Box::new(e))?;
       if sent < bytes.len() {
         Err(Box::new(DisplayError::WriteFailed))
