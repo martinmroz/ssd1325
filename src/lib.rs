@@ -158,6 +158,8 @@ impl error::Error for DisplayError {
 /// Mode of the primary communication channel.
 #[derive(Copy,Clone,Debug,Eq,PartialEq)]
 pub enum DisplayMode {
+  /// Interface idle. Not requested directly, but should be used when idle.
+  Idle,
   /// Display reset mode.
   Reset,
   /// Display idle mode. Cannot be in Reset, but can be either Data or Command.
