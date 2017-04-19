@@ -22,7 +22,9 @@ enum Event {
 
 struct MockControlChannel {
   /// Log for events occurring in the mock display.
-  event_log: Rc<RefCell<Vec<Event>>>
+  event_log: Rc<RefCell<Vec<Event>>>,
+  /// Simulate a control channel error.
+  pub sim_error: bool,
 }
 
 impl ssd1325::ControlChannel for MockControlChannel {
@@ -40,6 +42,10 @@ impl ssd1325::ControlChannel for MockControlChannel {
         ssd1325::DisplayMode::Command =>
           log.push(Event::ControlChannelEnterCommand),
       }
+    }
+
+    if self.sim_error {
+      return Err(Box::new(io::Error::new(io::ErrorKind::Other, "oh no!")));
     }
 
     // Invoke the requested function.
@@ -82,7 +88,7 @@ impl io::Write for MockDataChannel {
 /// Returns a mock control and data channel, and the event log shared between them for validation.
 fn create_test_setup() -> (MockControlChannel, MockDataChannel, Rc<RefCell<Vec<Event>>>) {
   let log = Rc::new(RefCell::new(Vec::<Event>::new()));
-  let control_channel = MockControlChannel { event_log: log.clone() };
+  let control_channel = MockControlChannel { event_log: log.clone(), sim_error: false };
   let data_channel = MockDataChannel { event_log: log.clone(), sim_write_zero: false, sim_write_error: false };
   (control_channel, data_channel, log)
 }
@@ -247,5 +253,17 @@ fn test_simulate_write_error() {
 
   // Invoke something that would yield a write over the data channel.
   // The transport will indicate that the write failed, which should yield an error.
+  assert_eq!(display.set_on(true).is_err(), true);
+}
+
+#[test]
+fn test_simulate_control_error() {
+  let (ref mut control, ref mut data, _) = create_test_setup();
+  control.sim_error = true;
+
+  let mut display = ssd1325::Ssd1325::new(data, control);
+
+  // Invoke something that would yield a control event.
+  // The control channel will indicate a failure occurred, which should yield an error.
   assert_eq!(display.set_on(true).is_err(), true);
 }
