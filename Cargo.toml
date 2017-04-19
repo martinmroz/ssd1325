@@ -8,5 +8,6 @@ documentation = "http://martinmroz.github.io/ssd1325"
 license = "MIT"
 readme = "README.md"
 description = "Adafruit 2.7in Monochrome 128x64 OLED Driver"
+keywords = ["ssd1325", "adafruit", "monochrome", "128x64", "display"]
 
 [dependencies]
