@@ -57,9 +57,9 @@ impl ssd1325::ControlChannel for MockControlChannel {
 struct MockDataChannel {
   /// Log for events occurring in the mock display.
   event_log: Rc<RefCell<Vec<Event>>>,
-  /// Simulate a short write on the next call.
+  /// Simulate a short write on subsequent writes.
   pub sim_write_zero: bool,
-  /// Simulate a write error on the next call.
+  /// Simulate a write error on subsequent writes.
   pub sim_write_error: bool,
 }
 
