@@ -1,7 +1,6 @@
 Adafruit 2.7" Monochrome 128x64 OLED Driver
 ===========================================
 
-
 [![](http://meritbadge.herokuapp.com/ssd1325)](https://crates.io/crates/ssd1325)
 [![Build Status](https://travis-ci.org/martinmroz/ssd1325.svg?branch=master)](https://travis-ci.org/martinmroz/ssd1325)
 [![Coverage Status](https://coveralls.io/repos/github/martinmroz/ssd1325/badge.svg?branch=master)](https://coveralls.io/github/martinmroz/ssd1325?branch=master)
