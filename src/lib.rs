@@ -185,7 +185,7 @@ pub struct Ssd1325<'a> {
 
 impl<'a> Ssd1325<'a> {
 
-  /// Returns a display instance of `size` pixels specified as `(horizontal, vertical)`.
+  /// Returns a new instance of the receiver.
   /// The `transport` instance is used to send data to the display, typically over SPI although
   /// the MCU interface can be used if a suitable adapter is provided.
   /// The `control_channel` is used to put the display into a given mode before writing data.
