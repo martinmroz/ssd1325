@@ -1,0 +1,6 @@
+[package]
+name = "ssd1325"
+version = "0.1.0"
+authors = ["Martin Mroz <martinmroz@gmail.com>"]
+
+[dependencies]
