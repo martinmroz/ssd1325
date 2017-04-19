@@ -6,7 +6,7 @@ use std::error;
 use std::io;
 use std::rc::Rc;
 
-#[derive(Debug,Clone,Eq,PartialEq)]
+#[derive(Debug,Copy,Clone,Eq,PartialEq)]
 enum Event {
   /// The control channel entered Reset mode.
   ControlChannelEnterReset,
@@ -17,7 +17,7 @@ enum Event {
   /// The control channel entered Command mode.
   ControlChannelEnterCommand,
   /// Data was written.
-  SendData(usize),
+  SendData,
 }
 
 struct MockControlChannel {
@@ -76,7 +76,7 @@ impl io::Write for MockDataChannel {
     } else if self.sim_write_error {
       Err(io::Error::new(io::ErrorKind::Other, "oh no!"))
     } else {
-      self.event_log.borrow_mut().push(Event::SendData(data.len()));
+      self.event_log.borrow_mut().push(Event::SendData);
       Ok(data.len())
     }
   }
@@ -114,7 +114,7 @@ fn test_init() {
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterReset);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(40));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
 }
 
@@ -135,7 +135,7 @@ fn test_clear() {
 
   let mut event_log_iter = event_log.iter();
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(6));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
 }
 
@@ -160,10 +160,10 @@ fn test_set_on_off() {
 
   let mut event_log_iter = event_log.iter();
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(1));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(1));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
 }
 
@@ -188,10 +188,10 @@ fn test_set_inverted_normal() {
 
   let mut event_log_iter = event_log.iter();
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(1));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(1));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
 }
 
@@ -221,13 +221,13 @@ fn test_blit_l1() {
   // Check the blit preamble was sent.
   let mut event_log_iter = event_log.iter();
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterCommand);
-  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(6));
+  assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
   assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
 
   // Check all 64 lines were sent.
   for _ in 0 .. 64 {
     assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterData);
-    assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(64));
+    assert_eq!(event_log_iter.next().unwrap(), &Event::SendData);
     assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
   }
 }
