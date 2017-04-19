@@ -56,13 +56,23 @@ impl ssd1325::ControlChannel for MockControlChannel {
 
 struct MockDataChannel {
   /// Log for events occurring in the mock display.
-  event_log: Rc<RefCell<Vec<Event>>>
+  event_log: Rc<RefCell<Vec<Event>>>,
+  /// Simulate a short write on the next call.
+  pub sim_write_zero: bool,
+  /// Simulate a write error on the next call.
+  pub sim_write_error: bool,
 }
 
 impl io::Write for MockDataChannel {
   fn write(&mut self, data: &[u8]) -> Result<usize, io::Error> {
-    self.event_log.borrow_mut().push(Event::SendData(data.len()));
-    Ok(data.len())
+    if self.sim_write_zero {
+      Ok(0)
+    } else if self.sim_write_error {
+      Err(io::Error::new(io::ErrorKind::Other, "oh no!"))
+    } else {
+      self.event_log.borrow_mut().push(Event::SendData(data.len()));
+      Ok(data.len())
+    }
   }
   fn flush(&mut self) -> Result<(), io::Error> {
     Ok(())
@@ -73,7 +83,7 @@ impl io::Write for MockDataChannel {
 fn create_test_setup() -> (MockControlChannel, MockDataChannel, Rc<RefCell<Vec<Event>>>) {
   let log = Rc::new(RefCell::new(Vec::<Event>::new()));
   let control_channel = MockControlChannel { event_log: log.clone() };
-  let data_channel = MockDataChannel { event_log: log.clone() };
+  let data_channel = MockDataChannel { event_log: log.clone(), sim_write_zero: false, sim_write_error: false };
   (control_channel, data_channel, log)
 }
 
@@ -214,4 +224,28 @@ fn test_blit_l1() {
     assert_eq!(event_log_iter.next().unwrap(), &Event::SendData(64));
     assert_eq!(event_log_iter.next().unwrap(), &Event::ControlChannelEnterIdle);
   }
+}
+
+#[test]
+fn test_simulate_write_zero_length() {
+  let (ref mut control, ref mut data, _) = create_test_setup();
+  data.sim_write_zero = true;
+
+  let mut display = ssd1325::Ssd1325::new(data, control);
+
+  // Invoke something that would yield a write over the data channel.
+  // The transport will indicate that it wrote zero bytes, which should yield an error.
+  assert_eq!(display.set_on(true).is_err(), true);
+}
+
+#[test]
+fn test_simulate_write_error() {
+  let (ref mut control, ref mut data, _) = create_test_setup();
+  data.sim_write_error = true;
+
+  let mut display = ssd1325::Ssd1325::new(data, control);
+
+  // Invoke something that would yield a write over the data channel.
+  // The transport will indicate that the write failed, which should yield an error.
+  assert_eq!(display.set_on(true).is_err(), true);
 }
